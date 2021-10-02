@@ -1,8 +1,9 @@
 import React from "react";
+import Layout from "../components/layout";
 
 const IndexPage = () => {
   return (
-    <main>
+    <Layout>
       <form action="/api/auth">
         <p>
           The solution to all your problems is here! Buy access to my{" "}
@@ -21,7 +22,7 @@ const IndexPage = () => {
           <button>Yes, please!</button>
         </p>
       </form>
-    </main>
+    </Layout>
   );
 };
 

@@ -1,21 +1,27 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useLayoutEffect, useState } from "react";
+import { navigate } from "gatsby";
 import axios from "axios";
+import queryString from "query-string";
 
-import useParams from "../hooks/useParams";
 import Layout from "../components/layout";
 
 const SuccessPage = ({ location }) => {
-  const params = useParams(location);
+  const { sessionId } = queryString.parse(location.search);
   const [status, setStatus] = useState("pending");
   const [message, setMessage] = useState("");
-  const verifyDone = useRef(false);
+
+  useLayoutEffect(() => {
+    if (!sessionId) {
+      navigate("/");
+    }
+  }, [sessionId]);
 
   useEffect(() => {
     const verifyPurchase = async () => {
       // Grab the session
       try {
         const result = await axios.get("/api/checkout", {
-          params: { sessionId: params.sessionId },
+          params: { sessionId: sessionId },
         });
         setStatus("fulfilled");
         setMessage(result.data.message);
@@ -25,11 +31,10 @@ const SuccessPage = ({ location }) => {
       }
     };
 
-    if (params.sessionId && !verifyDone.current) {
+    if (sessionId) {
       verifyPurchase();
-      verifyDone.current = true;
     }
-  }, [params.sessionId]);
+  }, [sessionId]);
 
   return (
     <Layout>

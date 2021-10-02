@@ -52,7 +52,7 @@ const createStripeSession = async (req, res) => {
     repo: process.env.GITHUB_REPO,
   });
 
-  if (access) {
+  if (false) {
     // 3. Respond
     res.status(202).json({
       message: `${user.username} already has access to the repo`,

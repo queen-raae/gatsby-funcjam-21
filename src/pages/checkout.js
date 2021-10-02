@@ -1,14 +1,18 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useLayoutEffect, useState } from "react";
+import { navigate } from "gatsby";
 import axios from "axios";
 
-import useSessionStorage from "../hooks/useStorage";
 import Layout from "../components/layout";
 
 const CheckoutPage = ({ location }) => {
   const [status, setStatus] = useState("pending");
   const [message, setMessage] = useState("");
-  const [accessToken, setAccessToken] = useSessionStorage("gh:access:token");
-  const checkoutDone = useRef(false);
+
+  useLayoutEffect(() => {
+    if (!location.state?.accessToken) {
+      navigate("/");
+    }
+  }, [location]);
 
   useEffect(() => {
     const checkout = async () => {
@@ -19,27 +23,27 @@ const CheckoutPage = ({ location }) => {
         const {
           data: { url, message },
         } = await axios.post("/api/checkout", {
-          accessToken: accessToken,
+          accessToken: location.state.accessToken,
           cancelUrl: `${location.origin}/`,
           successUrl: `${location.origin}/success/?sessionId={CHECKOUT_SESSION_ID}`,
         });
 
         if (url) {
           window.location = url;
+        } else {
+          setStatus("failed");
+          setMessage(message);
         }
-        setStatus("failed");
-        setMessage(message);
       } catch (error) {
         setMessage(error.response?.data?.message || error.message);
         setStatus("failed");
       }
     };
 
-    if (accessToken && !checkoutDone.current) {
+    if (location.state?.accessToken && location.origin) {
       checkout();
-      checkoutDone.current = true;
     }
-  }, [accessToken, location.origin, setAccessToken]);
+  }, [location]);
 
   return (
     <Layout>

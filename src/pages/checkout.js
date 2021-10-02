@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import axios from "axios";
 
 import useSessionStorage from "../hooks/useStorage";
+import Layout from "../components/layout";
 
 const CheckoutPage = ({ location }) => {
   const [status, setStatus] = useState("pending");
@@ -41,7 +42,7 @@ const CheckoutPage = ({ location }) => {
   }, [accessToken, location.origin, setAccessToken]);
 
   return (
-    <main>
+    <Layout>
       <p>
         {status === "pending" && <>Calling Stripe...</>}
         {status === "failed" && <>Hold up!</>}
@@ -52,7 +53,7 @@ const CheckoutPage = ({ location }) => {
           </>
         )}
       </p>
-    </main>
+    </Layout>
   );
 };
 

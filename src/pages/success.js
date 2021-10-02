@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import axios from "axios";
 
 import useParams from "../hooks/useParams";
+import Layout from "../components/layout";
 
 const SuccessPage = ({ location }) => {
   const params = useParams(location);
@@ -31,7 +32,7 @@ const SuccessPage = ({ location }) => {
   }, [params.sessionId]);
 
   return (
-    <main>
+    <Layout>
       <p>
         {status === "pending" && <>Verifying your payment...</>}
         {status === "failed" && <>Hold up!</>}
@@ -43,7 +44,7 @@ const SuccessPage = ({ location }) => {
           </>
         )}
       </p>
-    </main>
+    </Layout>
   );
 };
 

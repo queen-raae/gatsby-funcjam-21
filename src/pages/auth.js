@@ -4,11 +4,12 @@ import axios from "axios";
 
 import useParams from "../hooks/useParams";
 import useSessionStorage from "../hooks/useStorage";
+import Layout from "../components/layout";
 
 const AuthPage = ({ location }) => {
   const params = useParams(location);
 
-  const [status, setStatus] = useState("initial");
+  const [status, setStatus] = useState("pending");
   const [message, setMessage] = useState("");
   const [accessToken, setAccessToken] = useSessionStorage("gh:access:token");
   const authorizeDone = useRef(false);
@@ -47,7 +48,7 @@ const AuthPage = ({ location }) => {
   }, [accessToken]);
 
   return (
-    <main>
+    <Layout>
       <p>
         {status === "pending" && <>Calling GitHub...</>}
         {status === "failed" && <>Hold up!</>}
@@ -58,7 +59,7 @@ const AuthPage = ({ location }) => {
           </>
         )}
       </p>
-    </main>
+    </Layout>
   );
 };
 

@@ -13,6 +13,7 @@ export default (repoAccessToken = process.env.GITHUB_REPO_ACCESS_TOKEN) => {
   };
 
   const getUser = async ({ accessToken }) => {
+    // https://docs.github.com/en/rest/reference/users#get-a-user
     const { data } = await githubApi.get(`user`, {
       headers: {
         Authorization: `token ${accessToken}`,
@@ -27,6 +28,9 @@ export default (repoAccessToken = process.env.GITHUB_REPO_ACCESS_TOKEN) => {
   };
 
   const getRepoAccess = async ({ username, owner, repo }) => {
+    log("getRepoAccess", owner, repo, username);
+
+    // https://docs.github.com/en/rest/reference/repos#check-if-a-user-is-a-repository-collaborator
     const { status } = await githubApi.get(
       `repos/${owner}/${repo}/collaborators/${username}`,
       {
@@ -38,17 +42,20 @@ export default (repoAccessToken = process.env.GITHUB_REPO_ACCESS_TOKEN) => {
       }
     );
 
-    log("getRepoAccess", owner, repo, username, status);
+    log("status", status);
 
     return status === 204 ? true : false;
   };
 
   const addRepoAccess = async ({ username, owner, repo }) => {
-    const { status } = await githubApi.get(
+    log("addRepoAccess", owner, repo, username);
+
+    // https://docs.github.com/en/rest/reference/repos#add-a-repository-collaborator
+    const { status } = await githubApi.put(
       `repos/${owner}/${repo}/collaborators/${username}`
     );
 
-    log("addRepoAccess", status, username);
+    log("status", status);
 
     return true;
   };

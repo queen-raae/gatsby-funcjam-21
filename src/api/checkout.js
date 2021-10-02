@@ -89,7 +89,7 @@ const fetchStripeSession = async (req, res) => {
 
   // Make sure we have the GitHub username needed
   if (!username) {
-    throw createError(404, "GitHub username not found");
+    throw createError(402, "GitHub username not found");
   }
 
   // Make sure the session is paid for

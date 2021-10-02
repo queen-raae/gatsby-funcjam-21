@@ -13,6 +13,8 @@ export default (stripeKey = process.env.STRIPE_KEY) => {
     cancelUrl,
     priceId,
   }) => {
+    log("createSession", username);
+
     const session = await stripe.checkout.sessions.create({
       success_url: successUrl,
       cancel_url: cancelUrl,
@@ -29,15 +31,13 @@ export default (stripeKey = process.env.STRIPE_KEY) => {
       },
     });
 
-    log("createSession", session.id);
-
     return session;
   };
 
   const getSession = async ({ id }) => {
-    const session = await stripe.checkout.sessions.retrieve(id);
+    log("getSession", id);
 
-    log("retrieveSession", session.id);
+    const session = await stripe.checkout.sessions.retrieve(id);
 
     return session;
   };

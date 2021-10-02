@@ -1,9 +1,10 @@
 import createError from "http-errors";
+import Joi from "joi";
 
 import Stripe from "./../api-services/stripe";
 import Github from "./../api-services/github";
 
-const stripe = Stripe(process.env.STRIPE_KEY);
+const stripe = Stripe();
 const github = Github();
 
 export default async function handler(req, res) {
@@ -31,22 +32,32 @@ export default async function handler(req, res) {
 }
 
 const postHandler = async (req, res) => {
-  // 1. Validate
-  const { type, data } = req.body;
+  console.log(req.body.type);
 
-  console.log(type);
+  // 1. Validate that data coming in
+  const schema = Joi.object({
+    type: Joi.valid("checkout.session.completed"),
+    data: Joi.object({
+      object: Joi.object({
+        id: Joi.string().required(),
+      }).required(),
+    }).required(),
+  }).required();
 
-  if (type !== "checkout.session.completed") {
-    throw createError(422, `${req.body.type} not supported`);
+  const {
+    value: { data },
+    error,
+  } = schema.validate(req.body, { allowUnknown: true });
+  if (error) {
+    throw createError(422, error);
   }
 
-  const sessionFromStripe = stripe.getSession({ id: data.object.id });
-
+  const sessionFromStripe = await stripe.getSession({ id: data.object.id });
   const username = sessionFromStripe.metadata?.github;
 
-  // // Make sure we have the GitHub username needed
+  // Make sure we have the GitHub username needed
   if (!username) {
-    throw createError(404, "GitHub username not found");
+    throw createError(422, "GitHub username not found");
   }
 
   // Make sure the session is paid for
@@ -55,7 +66,11 @@ const postHandler = async (req, res) => {
   }
 
   // 2. Do the thing
-  await github.addRepoAccess({ username: username });
+  await github.addRepoAccess({
+    username: username,
+    owner: process.env.GITHUB_REPO_OWNER,
+    repo: process.env.GITHUB_REPO,
+  });
 
   // 3. Respond
   res.send("OK");

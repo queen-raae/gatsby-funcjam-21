@@ -15,6 +15,7 @@ export default (stripeKey = process.env.STRIPE_KEY) => {
   }) => {
     log("createSession", username);
 
+    // Stripe docs: https://stripe.com/docs/api/checkout/sessions/create
     const session = await stripe.checkout.sessions.create({
       success_url: successUrl,
       cancel_url: cancelUrl,
@@ -34,9 +35,10 @@ export default (stripeKey = process.env.STRIPE_KEY) => {
     return session;
   };
 
-  const getSession = async ({ id }) => {
-    log("getSession", id);
+  const retrieveSession = async ({ id }) => {
+    log("retrieveSession", id);
 
+    // Stripe docs: https://stripe.com/docs/api/checkout/sessions/retrieve
     const session = await stripe.checkout.sessions.retrieve(id);
 
     return session;
@@ -44,6 +46,6 @@ export default (stripeKey = process.env.STRIPE_KEY) => {
 
   return {
     createSession,
-    getSession,
+    retrieveSession,
   };
 };

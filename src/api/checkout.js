@@ -11,7 +11,6 @@ const github = Github();
  * Checkout handler, used to retreive Stripe checkout sessions (GET)
  * and create Stripe checkout sessions (POST).
  *
- * Stripe docs: https://stripe.com/docs/api/checkout/sessions
  */
 
 export default async function handler(req, res) {
@@ -106,7 +105,9 @@ const fetchStripeSession = async (req, res) => {
   }
 
   // Retrieve the Stripe Session
-  const sessionFromStripe = await stripe.getSession({ id: value.sessionId });
+  const sessionFromStripe = await stripe.retrieveSession({
+    id: value.sessionId,
+  });
 
   // Make sure we have the GitHub username needed
   const username = sessionFromStripe.metadata?.github;

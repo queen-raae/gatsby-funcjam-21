@@ -21,19 +21,14 @@ const CheckoutPage = ({ location }) => {
         setStatus("pending");
 
         const {
-          data: { url, message },
+          data: { url },
         } = await axios.post("/api/checkout", {
           accessToken: location.state.accessToken,
           cancelUrl: `${location.origin}/`,
           successUrl: `${location.origin}/success/?sessionId={CHECKOUT_SESSION_ID}`,
         });
 
-        if (url) {
-          window.location = url;
-        } else {
-          setStatus("failed");
-          setMessage(message);
-        }
+        window.location = url;
       } catch (error) {
         setMessage(error.response?.data?.message || error.message);
         setStatus("failed");

@@ -1,6 +1,6 @@
 import Stripe from "stripe";
 
-export default (stripeKey = process.env.STRIPE_KEY) => {
+export default (stripeKey = process.env.STRIPE_SECRET_KEY) => {
   const stripe = Stripe(stripeKey);
 
   const log = (...args) => {

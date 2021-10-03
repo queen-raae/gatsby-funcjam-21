@@ -1,6 +1,6 @@
 import axios from "axios";
 
-export default (repoAccessToken = process.env.GITHUB_REPO_ACCESS_TOKEN) => {
+export default (repoAccessToken = process.env.GITHUB_PERSONAL_ACCESS_TOKEN) => {
   const githubApi = axios.create({
     baseURL: "https://api.github.com/",
     headers: {

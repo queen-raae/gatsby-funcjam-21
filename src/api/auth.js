@@ -1,5 +1,14 @@
 import createError from "http-errors";
 import axios from "axios";
+import Joi from "joi";
+
+/**
+ * Auth handler, used to redirect to correct Github auth url (GET)
+ * and exchange the one time Github auth code for reusable Github access token (POST).
+ *
+ * Github docs: https://docs.github.com/en/developers/apps/building-oauth-apps/authorizing-oauth-apps#web-application-flow
+ * More on the auth dance: https://medium.com/typeforms-engineering-blog/the-beginners-guide-to-oauth-dancing-4b8f3666de10
+ */
 
 export default async function handler(req, res) {
   console.log(`${req.baseUrl} - ${req.method}`);
@@ -26,6 +35,11 @@ export default async function handler(req, res) {
   }
 }
 
+/**
+ * Redirect to correct Github auth url.
+ * Uses env variable GITHUB_CLIENT_ID.
+ */
+
 const getHandler = async (req, res) => {
   const GITHUB_AUTH_URL_BASE = `https://github.com/login/oauth/authorize`;
   const GITHUB_PARAMS = `scope=user:email&client_id=${process.env.GITHUB_CLIENT_ID}`;
@@ -33,21 +47,31 @@ const getHandler = async (req, res) => {
   res.redirect(GITHUB_AUTH_URL);
 };
 
-const postHandler = async (req, res) => {
-  // 1. Validate
-  const { code } = req.body;
+/**
+ * Exchange the one time Github auth code for reusable Github access token.
+ * Uses env variables GITHUB_CLIENT_ID and GITHUB_CLIENT_SECRET.
+ *
+ * @param  {string} req.body.code Github auth code
+ */
 
-  if (!code) {
-    throw createError(422, "Missing auth code or state", { expose: false });
+const postHandler = async (req, res) => {
+  // 1. Validate the data coming in
+  const schema = Joi.object({
+    code: Joi.string().required(),
+  }).required();
+
+  const { value, error: validationError } = schema.validate(req.body);
+  if (validationError) {
+    throw createError(422, error);
   }
 
   // 2. Do the thing
   const {
-    data: { error, error_description, access_token },
+    data: { error: authError, error_description, access_token },
   } = await axios.post(
     "https://github.com/login/oauth/access_token",
     {
-      code: req.body.code,
+      code: value.code,
       client_id: process.env.GITHUB_CLIENT_ID,
       client_secret: process.env.GITHUB_CLIENT_SECRET,
     },
@@ -58,7 +82,7 @@ const postHandler = async (req, res) => {
     }
   );
 
-  if (error) {
+  if (authError) {
     throw createError(401, error_description);
   }
 

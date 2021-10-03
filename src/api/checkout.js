@@ -7,6 +7,13 @@ import Github from "../api-services/github";
 const stripe = Stripe();
 const github = Github();
 
+/**
+ * Checkout handler, used to retreive Stripe checkout sessions (GET)
+ * and create Stripe checkout sessions (POST).
+ *
+ * Stripe docs: https://stripe.com/docs/api/checkout/sessions
+ */
+
 export default async function handler(req, res) {
   console.log(`${req.baseUrl} - ${req.method}`);
 
@@ -32,20 +39,31 @@ export default async function handler(req, res) {
   }
 }
 
+/**
+ * Create a Stripe checkout session with Github username added as metadata.
+ * Uses env variables GITHUB_REPO_OWNER, GITHUB_REPO and STRIPE_PRICE_ID.
+ *
+ * @param  {string} req.body.accessToken Github access token
+ * @param  {string} req.body.successUrl Passed to Stripe checkout session
+ * @param  {string} req.body.cancelUrl Passed to Stripe checkout session
+ */
+
 const createStripeSession = async (req, res) => {
+  // 1. Validate the data coming in
   const schema = Joi.object({
     accessToken: Joi.string().required(),
     successUrl: Joi.string().required(),
     cancelUrl: Joi.string().required(),
   }).required();
 
-  // 1. Validate that data coming in
   const { value, error } = schema.validate(req.body);
   if (error) {
     throw createError(422, error);
   }
 
+  // Get auhenticated Github user using the access token
   const user = await github.getUser({ accessToken: value.accessToken });
+  // Check if the user already has access to the repo
   const access = await github.getRepoAccess({
     username: user.username,
     owner: process.env.GITHUB_REPO_OWNER,
@@ -53,41 +71,45 @@ const createStripeSession = async (req, res) => {
   });
 
   if (access) {
-    // 3. Respond
-    res.status(202).json({
-      message: `${user.username} already has access to the repo`,
-    });
-  } else {
-    // 2. Create a Stripe Checkout Session for the amount
-
-    const session = await stripe.createSession({
-      username: user.username,
-      priceId: process.env.STRIPE_PRICE_ID,
-      successUrl: value.successUrl,
-      cancelUrl: value.cancelUrl,
-    });
-
-    // 3. Redirect to the session url
-    res.json({ url: session.url });
+    // User already has access, no new checkout sesion will be made
+    throw createError(422, `${user.username} already has access to the repo`);
   }
+
+  // 2. Create a Stripe Checkout Session with the Github username as metadata
+  const session = await stripe.createSession({
+    username: user.username,
+    priceId: process.env.STRIPE_PRICE_ID,
+    successUrl: value.successUrl,
+    cancelUrl: value.cancelUrl,
+  });
+
+  // 3. Response with url to session url
+  // Tried using res.redirect, but that gave me cors errors.
+  res.json({ url: session.url });
 };
 
+/**
+ * Retreive a Stripe checkout session.
+ *
+ * @param  {string} req.query.sessionId Stripe checkout id
+ */
+
 const fetchStripeSession = async (req, res) => {
+  // 1. Validate the data coming in
   const schema = Joi.object({
     sessionId: Joi.string().required(),
   }).required();
 
-  // 1. Validate that data coming in
   const { value, error } = schema.validate(req.query);
   if (error) {
     throw createError(422, error);
   }
 
-  // 2. Do the thing
+  // Retrieve the Stripe Session
   const sessionFromStripe = await stripe.getSession({ id: value.sessionId });
-  const username = sessionFromStripe.metadata?.github;
 
   // Make sure we have the GitHub username needed
+  const username = sessionFromStripe.metadata?.github;
   if (!username) {
     throw createError(402, "GitHub username not found");
   }
@@ -97,8 +119,11 @@ const fetchStripeSession = async (req, res) => {
     throw createError(402, "Payment still required");
   }
 
+  // 2. Do the thing
+  const message = `${username} shall get access to the repo shortly`;
+
   // 3. Respond
   res.status(200).json({
-    message: `${username} shall get access to the repo shortly`,
+    message: message,
   });
 };

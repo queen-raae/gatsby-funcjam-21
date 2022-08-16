@@ -44,8 +44,13 @@ export default (stripeKey = process.env.STRIPE_SECRET_KEY) => {
     return session;
   };
 
+  const verifyEvent = ({ body, signature, signingSecret }) => {
+    return stripe.webhooks.constructEvent(body, signature, signingSecret);
+  };
+
   return {
     createSession,
     retrieveSession,
+    verifyEvent,
   };
 };

@@ -1,12 +1,34 @@
-# My Gatsby FuncJam '21 entry - selling access to a private Github repo.
+# Sell access to a private Github repo
 
-This example demonstrates how to sell access to a private Github repo.
+A demo showing how to sell sell access to a private Github repo.
 
 - Authenticates the buyer using Github
 - Collects payment using Stripe
 - Automagically adds buyers to repo when payment goes through
 
-## Flow
+Also a Gatsby FuncJam ‘21 Winner 🥳
+
+&nbsp;
+
+## A message or two or three from Queen Raae 👑
+
+### 1-on-1 Emergency Gatsby Call
+
+Are you stuck on a reef in the sharky waters around the Gatsby islands? Check out [1-on-1 Emergency Gatsby Call](https://queen.raae.codes/gatsby-emergency/?utm_source=readme&utm_campaign=funcjam-21) with Queen Raae to get friendly advice you can put into action immediately from a seasoned Gatsby developer.
+
+### Stay updated and get the most out of Gatsby
+
+Learn how to get the most out of Gatsby and **stay updated** on the demo by [subscribing](https://queen.raae.codes/emails/?utm_source=readme&utm_campaign=funcjam-21) to daily emails from Queen Raae and Cap'n Ola.
+
+### Video Walkthrough
+
+Watch us do a walkthrough of the code on this [unauthorized and rum-fueled treasure hunt](https://youtu.be/fzlIzQbMtwM) in the sharky waters around the Gatsby islands on YouTube with Queen Raae, Pirate Paul and Cap'n Ola.
+
+&nbsp;
+
+## How does it work?
+
+To make it easier to follow there is a page for each major step in the process:
 
 - Index page triggers a GET request to `/api/auth` that triggers a redirect to Github page for authentication
   - On success Github redirects back to `/auth/?code=<github auth code>`

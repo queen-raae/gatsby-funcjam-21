@@ -7,6 +7,14 @@ import Github from "./../api-services/github";
 const stripe = Stripe();
 const github = Github();
 
+export const config = {
+  bodyParser: {
+    raw: {
+      type: `*/*`,
+    },
+  },
+};
+
 /**
  * Stripe webhook handler (POST).
  *
@@ -17,12 +25,7 @@ export default async function handler(req, res) {
   console.log(`${req.baseUrl} - ${req.method}`);
 
   try {
-    // Only handle POST requests for webhooks
-    if (req.method === "POST") {
-      await stripeWebhook(req, res);
-    } else {
-      throw createError(405, `${req.method} not allowed`);
-    }
+    await stripeWebhook(req, res);
   } catch (error) {
     const status = error.response?.status || error.statusCode || 500;
     const message = error.response?.data?.message || error.message;
@@ -41,47 +44,39 @@ export default async function handler(req, res) {
  * Add the Github user from the Stripe Checkout session metadata to the private Github repo.
  * Uses env variables GITHUB_REPO_OWNER and GITHUB_REPO.
  *
- * @param  {string} req.body.type Stripe event type
- * @param  {string} req.body.data.object.id The Stripe checkout session id
  */
 
 const stripeWebhook = async (req, res) => {
-  // Log the Stripe event type
-  console.log(req.body.type);
+  // 1. Verify the event
+  const event = stripe.verifyEvent({
+    body: req.body,
+    signature: req.headers["stripe-signature"],
+    signingSecret: process.env.STRIPE_SIGNING_SECRET,
+  });
 
-  // 1. Validate the data coming in
+  // 2. Validate the data
   const schema = Joi.object({
-    type: Joi.valid("checkout.session.completed"),
+    type: Joi.valid("checkout.session.completed").required(),
     data: Joi.object({
       object: Joi.object({
-        id: Joi.string().required(),
+        // Make sure the session is paid for
+        payment_status: Joi.valid("paid").required(),
+        // Make sure there is a GitHub username attached
+        metadata: Joi.object({
+          github: Joi.string().required(),
+        }),
       }).required(),
     }).required(),
   }).required();
 
-  const { value, error } = schema.validate(req.body, { allowUnknown: true });
+  const { value, error } = schema.validate(event, { allowUnknown: true });
   if (error) {
     throw createError(422, error);
   }
 
-  // Retrieve Stripe session
-  const sessionId = value.data.object.id;
-  const sessionFromStripe = await stripe.retrieveSession({ id: sessionId });
-
-  // Make sure we have the GitHub username needed
-  const username = sessionFromStripe.metadata?.github;
-  if (!username) {
-    throw createError(422, "GitHub username not found");
-  }
-
-  // Make sure the session is paid for
-  if (sessionFromStripe.payment_status !== "paid") {
-    throw createError(402, "Payment still required");
-  }
-
-  // 2. Do the thing: add github user to repo
+  // 3. Do the thing: add github user to repo
   await github.addRepoAccess({
-    username: username,
+    username: value.data.object.metadata.github,
     owner: process.env.GITHUB_REPO_OWNER,
     repo: process.env.GITHUB_REPO,
   });

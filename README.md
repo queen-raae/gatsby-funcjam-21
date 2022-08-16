@@ -8,7 +8,7 @@ This example demonstrates how to sell access to a private Github repo.
 
 ## Flow
 
-- Index page triggers a GET request to `/api/auth` triggers redirect to Github page for authentication
+- Index page triggers a GET request to `/api/auth` that triggers a redirect to Github page for authentication
   - On success Github redirects back to `/auth/?code=<github auth code>`
 - Auth page triggers a POST request to `/api/auth` to exchange the github auth code for an access token
   - On success navigates to `/checkout` with access token as state param
@@ -29,9 +29,11 @@ This example demonstrates how to sell access to a private Github repo.
 
 2.  **Develop**
 
-    - To get started clone this repo locally and run `npm install` to add all necessary packages.
-    - Create .env.development by copying .env.example `cp .env.example .env.development``
-    - Fill out with your own keys and you are ready for `npm run develop`
+    - To get started clone this repo locally and run `yarn install` to add all necessary packages.
+    - Create your own `.env.development` by copying `.env.example`: `cp .env.example .env.development`
+    - Login with Stripe CLI: `stripe login` and follow the directions
+    - Forward Stripe event to the Stripe Webook: `stripe listen --forward-to http://localhost:8000/api/stripe-webhook`
+    - Fill out `.env.development` with your own data and you are ready for `yarn develop`
 
 3.  **Deploy**
 
@@ -41,9 +43,9 @@ Make sure to add all the keys needed as [environment variables](https://support.
 
 ## Helpful Links
 
-Gatsby [functions docs](https://www.gatsbyjs.com/docs/reference/functions/).
-Github [Auth docs](https://docs.github.com/en/developers/apps/building-oauth-apps/authorizing-oauth-apps#web-application-flow)
-A great article on the [auth dance for beginners](https://medium.com/typeforms-engineering-blog/the-beginners-guide-to-oauth-dancing-4b8f3666de10)
-Stripe [Checkout Session API docs](https://stripe.com/docs/api/checkout/sessions)
-Github [Users API docs](https://docs.github.com/en/rest/reference/users)
-Github [Repos API docs](https://docs.github.com/en/rest/reference/repos)
+- Gatsby [functions docs](https://www.gatsbyjs.com/docs/reference/functions/).
+- Github [Auth docs](https://docs.github.com/en/developers/apps/building-oauth-apps/authorizing-oauth-apps#web-application-flow)
+- A great article on the [auth dance for beginners](https://medium.com/typeforms-engineering-blog/the-beginners-guide-to-oauth-dancing-4b8f3666de10)
+- Stripe [Checkout Session API docs](https://stripe.com/docs/api/checkout/sessions)
+- Github [Users API docs](https://docs.github.com/en/rest/reference/users)
+- Github [Repos API docs](https://docs.github.com/en/rest/reference/repos)
